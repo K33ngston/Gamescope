@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
@@ -114,7 +115,6 @@ export const getRankMedal = (rank: number) => {
 // ============= Hooks =============
 
 export const useGamification = (userId: string | null) => {
-  const { toast } = useToast();
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
