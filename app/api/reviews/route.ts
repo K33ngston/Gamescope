@@ -1,72 +1,92 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/database/db";
-import { reviews, reviewVotes, sessions, users } from "@/lib/database/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { reviews, users } from "@/lib/database/schema";
 import { cookies } from "next/headers";
+import { eq, desc } from "drizzle-orm";
 
-async function getUser() {
-  const cookie = await cookies();
-  const token = cookie.get("gs_token")?.value;
-  if (!token) return null;
-
-  const [session] = await db.select().from(sessions).where(eq(sessions.token, token)).limit(1);
-  if (!session) return null;
-
-  const [user] = await db.select().from(users).where(eq(users.id, session.userId)).limit(1);
-  return user || null;
+function getUserIdFromCookie() {
+  const cookieStore = cookies();
+  return cookieStore.get("gs_token")?.value || null;
 }
 
 export async function GET() {
-  const rows = await db.select().from(reviews).orderBy(desc(reviews.createdAt));
-  return NextResponse.json({ reviews: rows });
+  try {
+    const result = await db
+      .select({
+        id: reviews.id,
+        userId: reviews.userId,
+        gameName: reviews.gameName,
+        rating: reviews.rating,
+        reviewText: reviews.reviewText,
+        createdAt: reviews.createdAt,
+        username: users.username,
+      })
+      .from(reviews)
+      .leftJoin(users, eq(reviews.userId, users.id))
+      .orderBy(desc(reviews.createdAt));
+
+    return NextResponse.json(result);
+  } catch (err) {
+    return NextResponse.json({ message: "Failed to fetch reviews" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  try {
+    const body = await req.json();
+    const token = cookies().get("gs_token")?.value;
 
-  const { gameName, reviewText, rating } = await req.json();
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  if (!gameName || !rating) {
-    return NextResponse.json({ message: "Missing fields" }, { status: 400 });
+    const session = await db.query.sessions.findFirst({
+      where: (s, { eq }) => eq(s.token, token),
+    });
+
+    if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+    const { gameName, reviewText, rating } = body;
+
+    const [newReview] = await db
+      .insert(reviews)
+      .values({
+        userId: session.userId,
+        gameName,
+        reviewText,
+        rating,
+      })
+      .returning();
+
+    return NextResponse.json(newReview, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ message: "Failed to create review" }, { status: 500 });
   }
-
-  const [newReview] = await db
-    .insert(reviews)
-    .values({
-      userId: user.id,
-      gameName,
-      reviewText,
-      rating,
-    })
-    .returning();
-
-  return NextResponse.json({ review: newReview });
 }
 
 export async function PUT(req: Request) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  try {
+    const body = await req.json();
+    const { id, gameName, reviewText, rating } = body;
 
-  const { reviewId } = await req.json();
-  if (!reviewId) return NextResponse.json({ message: "Missing reviewId" }, { status: 400 });
+    await db
+      .update(reviews)
+      .set({ gameName, reviewText, rating })
+      .where(eq(reviews.id, id));
 
-  const existing = await db
-    .select()
-    .from(reviewVotes)
-    .where(and(eq(reviewVotes.reviewId, reviewId), eq(reviewVotes.userId, user.id)))
-    .limit(1);
-
-  if (existing.length > 0) {
-    return NextResponse.json({ message: "Already liked" }, { status: 400 });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ message: "Failed to update review" }, { status: 500 });
   }
+}
 
-  await db.insert(reviewVotes).values({ reviewId, userId: user.id });
+export async function DELETE(req: Request) {
+  try {
+    const body = await req.json();
+    const { id } = body;
 
-  await db
-    .update(reviews)
-    .set({ helpfulCount: sql`${reviews.helpfulCount} + 1` })
-    .where(eq(reviews.id, reviewId));
+    await db.delete(reviews).where(eq(reviews.id, id));
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ message: "Failed to delete review" }, { status: 500 });
+  }
 }

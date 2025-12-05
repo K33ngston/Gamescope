@@ -15,51 +15,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, ThumbsUp, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-//
-// ────────────────────────────────────────────────────────────────
-//   INTERFACES
-// ────────────────────────────────────────────────────────────────
-//
-
 interface Review {
-  id: number;
-  user: string;
-  game: string;
+  id: string;
+  username: string;
+  gameName: string;
   rating: number;
-  date: string;
-  content: string;
-  likes: number;
-  comments: number;
+  reviewText: string;
+  createdAt: string;
 }
 
-interface EggRatingDisplayProps {
-  rottenPercentage: number;
-  freshCount: number;
-  rottenCount: number;
-}
-
-interface EggAnimationProps {
-  type: "fresh" | "rotten";
-  onComplete?: () => void;
-}
-
-//
-// ────────────────────────────────────────────────────────────────
-//   EGG ANIMATION COMPONENT
-// ────────────────────────────────────────────────────────────────
-//
-
-const EggAnimation = ({ type, onComplete }: EggAnimationProps) => {
+const EggAnimation = ({ type, onComplete }: { type: "fresh" | "rotten"; onComplete: () => void }) => {
   const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const t = setTimeout(() => {
       setIsAnimating(false);
-      onComplete?.();
+      onComplete();
     }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div
@@ -72,7 +47,6 @@ const EggAnimation = ({ type, onComplete }: EggAnimationProps) => {
         <div className="text-8xl drop-shadow-2xl animate-pulse">
           {type === "fresh" ? "🥚" : "🤢"}
         </div>
-
         <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap">
           <p
             className={cn(
@@ -90,125 +64,100 @@ const EggAnimation = ({ type, onComplete }: EggAnimationProps) => {
   );
 };
 
-//
-// ────────────────────────────────────────────────────────────────
-//   EGG RATING DISPLAY COMPONENT
-// ────────────────────────────────────────────────────────────────
-//
-
 const EggRatingDisplay = ({
   rottenPercentage,
   freshCount,
   rottenCount,
-}: EggRatingDisplayProps) => {
-  return (
-    <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-4 mb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="text-center">
-            <div className="text-3xl mb-1">🥚</div>
-            <div className="text-2xl font-bold text-green-400">{freshCount}</div>
-            <div className="text-xs text-muted-foreground">Fresh</div>
-          </div>
-
-          <div className="h-12 w-px bg-border" />
-
-          <div className="text-center">
-            <div className="text-3xl mb-1">🤢</div>
-            <div className="text-2xl font-bold text-red-400">{rottenCount}</div>
-            <div className="text-xs text-muted-foreground">Rotten</div>
-          </div>
+}: {
+  rottenPercentage: number;
+  freshCount: number;
+  rottenCount: number;
+}) => (
+  <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-4 mb-6">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <div className="text-3xl mb-1">🥚</div>
+          <div className="text-2xl font-bold text-green-400">{freshCount}</div>
+          <div className="text-xs text-muted-foreground">Fresh</div>
         </div>
 
-        <div className="text-right">
-          <div className="text-sm text-muted-foreground mb-1">Rotten Egg Rate</div>
-          <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-            {rottenPercentage}%
-          </div>
+        <div className="h-12 w-px bg-border" />
+
+        <div className="text-center">
+          <div className="text-3xl mb-1">🤢</div>
+          <div className="text-2xl font-bold text-red-400">{rottenCount}</div>
+          <div className="text-xs text-muted-foreground">Rotten</div>
         </div>
       </div>
 
-      <div className="mt-4 h-3 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500"
-          style={{ width: `${rottenPercentage}%` }}
-        />
+      <div className="text-right">
+        <div className="text-sm text-muted-foreground mb-1">Rotten Egg Rate</div>
+        <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+          {rottenPercentage}%
+        </div>
       </div>
     </div>
-  );
-};
 
-//
-// ────────────────────────────────────────────────────────────────
-//   MAIN PAGE
-// ────────────────────────────────────────────────────────────────
-//
+    <div className="mt-4 h-3 bg-muted rounded-full overflow-hidden">
+      <div
+        className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500"
+        style={{ width: `${rottenPercentage}%` }}
+      />
+    </div>
+  </div>
+);
 
-const ReviewsPage = () => {
+export default function ReviewsPage() {
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewText, setReviewText] = useState("");
   const [gameName, setGameName] = useState("");
   const [rating, setRating] = useState(0);
-  const [hoveredStar, setHoveredStar] = useState(0);
-  const [showEggAnimation, setShowEggAnimation] = useState(false);
+  const [hoverStar, setHoverStar] = useState(0);
+  const [showEgg, setShowEgg] = useState(false);
   const [eggType, setEggType] = useState<"fresh" | "rotten">("fresh");
 
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: 1,
-      user: "Alex Chen",
-      game: "The Witcher 3",
-      rating: 5,
-      date: "2 days ago",
-      content: "An absolute masterpiece! The world-building is phenomenal.",
-      likes: 24,
-      comments: 8,
-    },
-    {
-      id: 2,
-      user: "Sarah Miller",
-      game: "Cyberpunk 2077",
-      rating: 4,
-      date: "1 week ago",
-      content: "After updates, the game really shines. Night City feels alive!",
-      likes: 15,
-      comments: 5,
-    },
-  ]);
+  async function fetchReviews() {
+    const res = await fetch("/api/reviews");
+    const data = await res.json();
+    setReviews(data);
+  }
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   const freshCount = reviews.filter((r) => r.rating >= 4).length;
   const rottenCount = reviews.filter((r) => r.rating <= 2).length;
   const total = freshCount + rottenCount;
   const rottenPercentage = total > 0 ? Math.round((rottenCount / total) * 100) : 0;
 
-  const submitReview = () => {
+  async function submitReview() {
     if (!reviewText.trim() || !gameName.trim() || rating === 0) {
       toast.error("Please fill all fields and choose a rating.");
       return;
     }
 
-    const newReview: Review = {
-      id: reviews.length + 1,
-      user: "You",
-      game: gameName,
-      rating,
-      date: "Just now",
-      content: reviewText,
-      likes: 0,
-      comments: 0,
-    };
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      body: JSON.stringify({ gameName, reviewText, rating }),
+    });
 
-    setReviews([newReview, ...reviews]);
+    if (!res.ok) {
+      toast.error("Failed to post review");
+      return;
+    }
 
-    const isGood = rating >= 4;
-    setEggType(isGood ? "fresh" : "rotten");
-    setShowEggAnimation(true);
-
+    toast.success("Review posted!");
     setReviewText("");
     setGameName("");
     setRating(0);
 
-    toast.success(`Your review for ${gameName} has been posted.`);
-  };
+    setEggType(rating >= 4 ? "fresh" : "rotten");
+    setShowEgg(true);
+
+    fetchReviews();
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -218,7 +167,6 @@ const ReviewsPage = () => {
 
         <main className="flex-1 p-6">
           <div className="max-w-4xl mx-auto">
-
             <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent mb-2">
               Reviews
             </h1>
@@ -232,7 +180,6 @@ const ReviewsPage = () => {
               rottenCount={rottenCount}
             />
 
-            {/* Write Review */}
             <Card className="p-6 mb-8 bg-card/50 backdrop-blur border-border">
               <h2 className="text-xl font-semibold mb-4">Write a Review</h2>
 
@@ -241,32 +188,30 @@ const ReviewsPage = () => {
                   placeholder="Game name..."
                   value={gameName}
                   onChange={(e) => setGameName(e.target.value)}
-                  className="bg-background/50"
                 />
 
                 <Textarea
                   placeholder="Share your thoughts about the game..."
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
-                  className="bg-background/50 min-h-32"
+                  className="min-h-32"
                 />
 
                 <div className="flex items-center justify-between">
-                  {/* Star Rating */}
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Button
                         key={s}
                         variant="ghost"
                         size="icon"
-                        onMouseEnter={() => setHoveredStar(s)}
-                        onMouseLeave={() => setHoveredStar(0)}
+                        onMouseEnter={() => setHoverStar(s)}
+                        onMouseLeave={() => setHoverStar(0)}
                         onClick={() => setRating(s)}
                       >
                         <Star
                           className={cn(
                             "h-5 w-5 transition-all",
-                            s <= (hoveredStar || rating)
+                            s <= (hoverStar || rating)
                               ? "fill-primary text-primary"
                               : "text-muted-foreground"
                           )}
@@ -275,22 +220,17 @@ const ReviewsPage = () => {
                     ))}
                   </div>
 
-                  <Button
-                    className="bg-gradient-to-r from-primary to-accent"
-                    onClick={submitReview}
-                  >
+                  <Button onClick={submitReview} className="bg-gradient-to-r from-primary to-accent">
                     Post Review
                   </Button>
                 </div>
               </div>
             </Card>
 
-            {/* Animation */}
-            {showEggAnimation && (
-              <EggAnimation type={eggType} onComplete={() => setShowEggAnimation(false)} />
+            {showEgg && (
+              <EggAnimation type={eggType} onComplete={() => setShowEgg(false)} />
             )}
 
-            {/* Reviews List */}
             <div className="space-y-6">
               {reviews.map((review) => (
                 <Card
@@ -300,16 +240,18 @@ const ReviewsPage = () => {
                   <div className="flex items-start gap-4">
                     <Avatar>
                       <AvatarImage
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.user}`}
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.username ?? "unknown"}`}
                       />
-                      <AvatarFallback>{review.user[0]}</AvatarFallback>
+                      <AvatarFallback>{review.username?.[0] ?? "?"}</AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h3 className="font-semibold">{review.user}</h3>
-                          <p className="text-sm text-muted-foreground">{review.date}</p>
+                          <h3 className="font-semibold">{review.username ?? "Unknown User"}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(review.createdAt).toLocaleString()}
+                          </p>
                         </div>
 
                         <div className="flex gap-1">
@@ -319,17 +261,15 @@ const ReviewsPage = () => {
                         </div>
                       </div>
 
-                      <p className="text-primary/80 font-medium mb-2">{review.game}</p>
-                      <p className="text-foreground/90 mb-4">{review.content}</p>
+                      <p className="text-primary/80 font-medium mb-2">{review.gameName}</p>
+                      <p className="text-foreground/90 mb-4">{review.reviewText}</p>
 
                       <div className="flex gap-4">
                         <Button variant="ghost" size="sm" className="gap-2">
-                          <ThumbsUp className="h-4 w-4" />
-                          {review.likes}
+                          <ThumbsUp className="h-4 w-4" /> {0}
                         </Button>
                         <Button variant="ghost" size="sm" className="gap-2">
-                          <MessageSquare className="h-4 w-4" />
-                          {review.comments}
+                          <MessageSquare className="h-4 w-4" /> {0}
                         </Button>
                       </div>
                     </div>
@@ -337,12 +277,9 @@ const ReviewsPage = () => {
                 </Card>
               ))}
             </div>
-
           </div>
         </main>
       </div>
     </div>
   );
-};
-
-export default ReviewsPage;
+}
