@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
+// import Image from "next/image";
 
 interface GameCardProps {
   title: string;
@@ -15,13 +15,13 @@ export const GameCard = ({ title, image, rating, genre, platform }: GameCardProp
   return (
     <Card className="overflow-hidden group hover:shadow-elevated transition-all duration-300 cursor-pointer">
       <div className="relative h-48 overflow-hidden">
-        <Image
+        {/* <Image
           src={image} 
           width={300}
           height={300}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-        />
+        /> */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
           {platform}

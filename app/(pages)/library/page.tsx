@@ -87,7 +87,8 @@ const Library = () => {
                     <div key={game.id} className="group">
 
                          {/* {...game} */}
-                      <GameCard title={""} image={""} rating={0} genre={""} platform={""} />
+                      {/* <GameCard title={""} image={""} rating={0} genre={""} platform={""} /> */}
+                      <GameCard />
                       <div className="mt-2 text-sm text-muted-foreground">
                         {game.hoursPlayed} hours played
                       </div>
@@ -101,6 +102,8 @@ const Library = () => {
                   {ownedGames.slice(0, 2).map((game) => (
                     <div key={game.id} className="group">
                       <GameCard title={""} image={""} rating={0} genre={""} platform={""} />
+                                            <GameCard />
+
                       <div className="mt-2 text-sm text-muted-foreground">
                         Last played: 2 days ago
                       </div>

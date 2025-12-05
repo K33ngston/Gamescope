@@ -20,7 +20,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <h1 className="text-2xl font-display font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-2xl font-display font-bold bg-gradient-primary bg-clip-text ">
             GameScope
           </h1>
           SearchBar

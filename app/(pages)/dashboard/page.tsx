@@ -1,6 +1,5 @@
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
-
 import { Library, Star, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -95,7 +94,7 @@ const Dashboard = () => {
               </h2>
             </div>
             <p className="text-muted-foreground">
-              Here&apost;s what&apost;s happening with your gaming journey today.
+              Here&#39;s what&apos;s happening with your gaming journey today.
             </p>
           </div>
 
@@ -154,7 +153,9 @@ const Dashboard = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {wishlistGames.map((game, index) => (
-                      <GameCard key={index} {...game} />
+                      // <GameCard key={index} {...game} />
+                                            <GameCard />
+
                     ))}
                   </div>
                 </CardContent>

@@ -1,0 +1,64 @@
+import { pgTable, uuid, text, timestamp, integer, varchar, jsonb, date } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const userGamification = pgTable("user_gamification", {
+  userId: uuid("user_id").primaryKey(),
+  totalPoints: integer("total_points").notNull().default(0),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActivityDate: date("last_activity_date"),
+  badges: jsonb("badges").$type<string[]>().default(sql`'[]'::jsonb`),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const pointsHistory = pgTable("points_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  points: integer("points").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const reviews = pgTable("reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  gameId: integer("game_id"),
+  gameName: text("game_name"),
+  helpfulCount: integer("helpful_count").default(0),
+  rating: integer("rating").notNull(),
+  reviewText: text("review_text"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const events = pgTable("events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
+  location: text("location").notNull(),
+  eventType: varchar("event_type", { length: 50 }).notNull(),
+  customType: varchar("custom_type", { length: 50 }),
+  durationMinutes: integer("duration_minutes"),
+  maxAttendees: integer("max_attendees"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
